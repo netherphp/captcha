@@ -290,7 +290,12 @@ class Captcha {
 		$Hash = NULL;
 		$Err = NULL;
 
-		// try to decode the token they gave us with the key they gave us.
+		////////
+
+		if(!str_contains($Token, '.'))
+		$Token = base64_decode($Token);
+
+		////////
 
 		try {
 			$Hash = hash($Config->AlgoHash, $Key);

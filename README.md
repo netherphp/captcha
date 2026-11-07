@@ -14,22 +14,29 @@ A locally produced Captcha.
 $Cap = Nether\Captcha::Fresh();
 
 ?>
+```
 
+```html
 <div>
 	<div>
 		<img src="<?php echo $Cap->GetImageEncoded() ?>" />
 	</div>
 	<div>
-		<input type="hidden" name="captcha-token" value="<?php echo $Cap->GetTokenEncoded() ?>" />
+		<p>Enter code from above image.</p>
 		<input type="text" name="captcha-input" />
+		<input type="hidden" name="captcha-token" value="<?php echo $Cap->GetTokenEncoded() ?>" />
 	</div>
 </div>
 
 ```
 
 ```php
+$CaptchaOK = Nether\Captcha::Validate(
+	$_POST['captcha-token'],
+	$_POST['captcha-input']
+);
 
-if(!Nether\Captcha::Validate($Token, $Input)) {
+if(!$CaptchaOK) {
 	echo 'failed to validate captcha.';
 	return;
 }
