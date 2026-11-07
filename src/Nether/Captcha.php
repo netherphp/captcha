@@ -157,9 +157,7 @@ class Captcha {
 	GetTokenEncode():
 	string {
 
-		// wrap it in base64 i dont like the dots.
-
-		return $this->GetToken();
+		return base64_encode($this->GetToken());
 	}
 
 	public function
