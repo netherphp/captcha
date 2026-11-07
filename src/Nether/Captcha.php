@@ -36,6 +36,9 @@ class Captcha {
 	public string
 	$Token;
 
+	public Captcha\Image
+	$Img;
+
 	////////////////////////////////////////////////////////////////
 
 	public function
@@ -150,23 +153,23 @@ class Captcha {
 		return $this->Token;
 	}
 
-	////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////
+	public function
+	GetTokenEncode():
+	string {
+
+		// wrap it in base64 i dont like the dots.
+
+		return $this->GetToken();
+	}
 
 	public function
-	NewImage():
-	Captcha\Image {
+	GetImageEncoded():
+	string {
 
-		$Output = new Captcha\Image(
-			$this->Config->ImageWidth,
-			$this->Config->ImageHeight,
-			$this->Config->ImageFont,
-			$this->Key
+		return sprintf(
+			'data:image/png;base64,%s',
+			base64_encode($this->Img->Render())
 		);
-
-		$Output->Generate();
-
-		return $Output;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -180,7 +183,8 @@ class Captcha {
 		->PrepareKeyHash()
 		->PrepareTimeWindow()
 		->PreparePayload()
-		->PrepareToken();
+		->PrepareToken()
+		->PrepareImage();
 
 		return $this;
 	}
@@ -236,6 +240,22 @@ class Captcha {
 			$this->Hash,
 			$this->Config->AlgoToken
 		);
+
+		return $this;
+	}
+
+	protected function
+	PrepareImage():
+	static {
+
+		$this->Img = new Captcha\Image(
+			$this->Config->ImageWidth,
+			$this->Config->ImageHeight,
+			$this->Config->ImageFont,
+			$this->Key
+		);
+
+		$this->Img->Generate();
 
 		return $this;
 	}

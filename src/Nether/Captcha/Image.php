@@ -144,13 +144,12 @@ class Image {
 
 	public function
 	Render():
-	void {
-		
-		header('content-type: image/png');
-	
-		echo $this->Img->getImageBlob();
+	string {
 
-		return;
+		$this->Img->setImageCompressionQuality(95); 
+		$this->Img->setOption('png:compression-level', '9');
+
+		return $this->Img->getImageBlob();
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -190,8 +189,8 @@ class Image {
 		);
 
 		$Tmp->resizeImage(
-			$this->Width * (0.9 * $Rumbler->Scale),
-			$this->Height * (0.9 * $Rumbler->Scale),
+			(int)($this->Width * (0.9 * $Rumbler->Scale)),
+			(int)($this->Height * (0.9 * $Rumbler->Scale)),
 			Imagick::FILTER_LANCZOS2, 0.0,
 			TRUE
 		);
@@ -202,8 +201,8 @@ class Image {
 
 		$this->Img->compositeImage(
 			$Tmp, Imagick::COMPOSITE_BLEND,
-			(($this->Width - $Tmp->getImageWidth()) / 2) + $Rumbler->X,
-			(($this->Height - $Tmp->getImageHeight()) / 2) + $Rumbler->Y
+			(int)(($this->Width - $Tmp->getImageWidth()) / 2) + $Rumbler->X,
+			(int)(($this->Height - $Tmp->getImageHeight()) / 2) + $Rumbler->Y
 		);
 
 		return;
