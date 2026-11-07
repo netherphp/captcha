@@ -128,6 +128,42 @@ extends TestCase {
 
 	#[Test]
 	public function
+	FailBeacuseIncorrectKey():
+	void {
+
+		$Cap = Captcha::New();
+		$Cap->Generate();
+
+		$this->assertFalse(Captcha::Validate(
+			$Cap->GetToken(),
+			'chumbawamba'
+		));
+
+		return;
+	}
+
+	#[Test]
+	public function
+	FailBeacuseExpired():
+	void {
+
+		$Cap = Captcha::New();
+		$Cap->SetTimeToExpire(-30);
+		$Cap->Generate();
+
+		$this->assertFalse(Captcha::Validate(
+			$Cap->GetToken(),
+			$Cap->GetKey()
+		));
+
+		return;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Test]
+	public function
 	SetKeyNullResumesRandom():
 	void {
 
