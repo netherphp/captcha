@@ -1,10 +1,8 @@
 {
 	"name": "netherphp/captcha",
-	"description": "Provides interfaces to common Captcha systems.",
+	"description": "Provides a basic captcha system.",
 	"keywords": [ "php", "captcha" ],
 	"license": "BSD-2-Clause",
-	"minimum-stability": "dev",
-	"prefer-stable": true,
 	"authors":[
 		{
 			"name": "Bob Majdak Jr",
@@ -13,27 +11,15 @@
 			"role": "developer"
 		}
 	],
-	"config": {
-		"preferred-install": {
-			"netherphp/*": "source",
-			"*": "dist"
-		},
-		"allow-plugins": {
-			"netherphp/composer-plugin": true,
-			"dealerdirect/phpcodesniffer-composer-installer": true
-		}
-	},
 	"require": {
-		"php": "^8.1",
-		"netherphp/atlantis": "dev-master"
+		"php": "^8.5",
+		"netherphp/datastore": "^0",
+		"firebase/php-jwt": "^7.2"
 	},
 	"require-dev": {
-		"netherphp/standards": ">=0.2.8",
-		"phpunit/phpunit": "^9.5.28",
-		"dealerdirect/phpcodesniffer-composer-installer": "^0.7.2"
+		"phpunit/phpunit": "^13"
 	},
 	"bin": [
-
 	],
 	"autoload": {
 		"psr-0": {
