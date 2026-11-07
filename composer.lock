@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "87e871fac28809705af537878061a8c8",
+    "content-hash": "06db368c8377c0d248616fedb1bafba3",
     "packages": [
         {
             "name": "firebase/php-jwt",
@@ -82,16 +82,16 @@
         },
         {
             "name": "netherphp/datastore",
-            "version": "v0.0.3",
+            "version": "v0.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/netherphp/datastore.git",
-                "reference": "9761bb4050d2ba69afd3ab571431aac90d19f572"
+                "reference": "e65b99f93b4b30bc301438fbd19bf9fa673fb68c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/netherphp/datastore/zipball/9761bb4050d2ba69afd3ab571431aac90d19f572",
-                "reference": "9761bb4050d2ba69afd3ab571431aac90d19f572",
+                "url": "https://api.github.com/repos/netherphp/datastore/zipball/e65b99f93b4b30bc301438fbd19bf9fa673fb68c",
+                "reference": "e65b99f93b4b30bc301438fbd19bf9fa673fb68c",
                 "shasum": ""
             },
             "require": {
@@ -123,9 +123,9 @@
             "description": "Redux of Datastore from Common",
             "support": {
                 "issues": "https://github.com/netherphp/datastore/issues",
-                "source": "https://github.com/netherphp/datastore/tree/v0.0.3"
+                "source": "https://github.com/netherphp/datastore/tree/v0.0.4"
             },
-            "time": "2026-11-07T07:05:17+00:00"
+            "time": "2026-11-07T18:14:24+00:00"
         },
         {
             "name": "netherphp/filter",
@@ -2094,7 +2094,8 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.5"
+        "php": "^8.5",
+        "ext-imagick": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

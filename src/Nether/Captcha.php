@@ -39,9 +39,9 @@ class Captcha {
 	////////////////////////////////////////////////////////////////
 
 	public function
-	__Construct() {
+	__Construct(?Captcha\Config $Config=NULL) {
 
-		$this->Config = new Captcha\Config;
+		$this->Config = $Config ?? new Captcha\Config;
 
 		return;
 	}
@@ -153,6 +153,40 @@ class Captcha {
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
+	public function
+	NewImage():
+	Captcha\Image {
+
+		$Output = new Captcha\Image(
+			$this->Config->ImageWidth,
+			$this->Config->ImageHeight,
+			$this->Config->ImageFont,
+			$this->Key
+		);
+
+		$Output->Generate();
+
+		return $Output;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	public function
+	Generate():
+	static {
+
+		($this)
+		->PrepareKeyHash()
+		->PrepareTimeWindow()
+		->PreparePayload()
+		->PrepareToken();
+
+		return $this;
+	}
+
+	////////////////////////////////////////////////////////////////
+
 	protected function
 	PrepareKeyHash():
 	static {
@@ -206,39 +240,24 @@ class Captcha {
 		return $this;
 	}
 
-	public function
-	Generate():
-	static {
-
-		($this)
-		->PrepareKeyHash()
-		->PrepareTimeWindow()
-		->PreparePayload()
-		->PrepareToken();
-
-		return $this;
-	}
-
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
 	static public function
-	Key():
+	Key(?Captcha\Config $Config=NULL):
 	string {
 
-		$Config = new Captcha\Config;
+		$Config = $Config ?? new Captcha\Config;
+		$List = Datastore::FromString($Config->KeyCharList);
+		$Min = 0;
+		$Max = $List->Count() - 1;
+		$Size = NULL;
 		$Key = '';
 
 		////////
 
 		for($Size = 0; $Size < $Config->KeyLength; $Size++)
-		$Key .= match(TRUE) {
-			(random_int(0, 1) === 1)
-			=> range('0', '9')[random_int(0, 9)],
-
-			default
-			=> range('A', 'Z')[random_int(0, 25)]
-		};
+		$Key .= $List->Get(random_int($Min, $Max));
 
 		////////
 
@@ -246,10 +265,10 @@ class Captcha {
 	}
 
 	static public function
-	Validate(string $Token, string $Key):
+	Validate(string $Token, string $Key, ?Captcha\Config $Config=NULL):
 	?bool {
 
-		$Config = new Captcha\Config;
+		$Config = $Config ?? new Captcha\Config;
 		$Hash = NULL;
 		$Err = NULL;
 
@@ -287,20 +306,23 @@ class Captcha {
 		return TRUE;
 	}
 
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
 	static public function
-	New():
+	New(?Captcha\Config $Config=NULL):
 	static {
 
-		$Output = new static;
+		$Output = new static($Config);
 
 		return $Output;
 	}
 
 	static public function
-	Fresh():
+	Fresh(?Captcha\Config $Config=NULL):
 	static {
 
-		$Output = new static;
+		$Output = new static($Config);
 		$Output->Generate();
 
 		return $Output;

@@ -26,7 +26,7 @@ class Payload {
 	////////////////////////////////////////////////////////////////
 
 	public function
-	__Construct(string $Issuer='', int $IssuedAt=-1, int $Expires=-1) {
+	__Construct(string $Issuer, int $IssuedAt, int $Expires) {
 
 		$this->Issuer = $Issuer;
 		$this->IssuedAt = $IssuedAt;
@@ -66,10 +66,11 @@ class Payload {
 	FromPayload(object $Input):
 	static {
 
-		$Decode = Datastore::FromObject($Input);
-		$Decode->SetValueFilter('iss', Filter\Text::Trimmed(...));
-		$Decode->SetValueFilter('iat', Filter\Type::Int(...));
-		$Decode->SetValueFilter('exp', Filter\Type::Int(...));
+		$Decode = Datastore::FromInput(get_object_vars($Input), [
+			'iss' => Filter\Text::Trimmed(...),
+			'iat' => Filter\Type::Int(...),
+			'exp' => Filter\Type::Int(...)
+		]);
 
 		if(!$Decode->HasAll('iss', 'iat', 'exp'))
 		throw new Exception('invalid payload format');

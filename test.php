@@ -2,12 +2,8 @@
 
 require('vendor/autoload.php');
 
-$Cap = new Nether\Captcha();
-$Cap->Generate();
+$Cap = Nether\Captcha::Fresh();
+$Img = $Cap->NewImage();
+$Img->Render();
 
-var_dump($Cap);
-
-var_dump(Nether\Captcha::Validate(
-	$Cap->GetToken(),
-	$Cap->GetKey()
-));
+var_dump($Img);

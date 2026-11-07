@@ -45,7 +45,7 @@ extends TestCase {
 		$Err = NULL;
 
 		try { JWT\JWT::decode($Token, new JWT\Key(strrev($Hash), $Algo)); }
-		catch(Exception $Err) { }
+		catch(Exception $Err) { } // -------------^^^^^^
 
 		$this->assertInstanceOf(JWT\SignatureInvalidException::class, $Err);
 

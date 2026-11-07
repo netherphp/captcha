@@ -8,6 +8,11 @@ namespace Nether\Captcha;
 
 class Config {
 
+	const
+	FontDefault = 'neon-sans',
+	FontBold    = 'nouveau-ibm',
+	FontCrisp   = 'xanmono';
+
 	public string
 	$AlgoHash = 'sha512';
 
@@ -20,7 +25,19 @@ class Config {
 	public int
 	$TimeToExpire = 180;
 
+	public string
+	$KeyCharList = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 	public int
-	$KeyLength = 8;
+	$KeyLength = 6;
+
+	public string
+	$ImageFont = self::FontDefault;
+
+	public int
+	$ImageWidth = 200;
+
+	public int
+	$ImageHeight = 60;
 
 };
