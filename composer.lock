@@ -82,16 +82,16 @@
         },
         {
             "name": "netherphp/datastore",
-            "version": "v0.0.1",
+            "version": "v0.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/netherphp/datastore.git",
-                "reference": "4b7292997cec3491d2ab307384a16b1fcf244e10"
+                "reference": "9761bb4050d2ba69afd3ab571431aac90d19f572"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/netherphp/datastore/zipball/4b7292997cec3491d2ab307384a16b1fcf244e10",
-                "reference": "4b7292997cec3491d2ab307384a16b1fcf244e10",
+                "url": "https://api.github.com/repos/netherphp/datastore/zipball/9761bb4050d2ba69afd3ab571431aac90d19f572",
+                "reference": "9761bb4050d2ba69afd3ab571431aac90d19f572",
                 "shasum": ""
             },
             "require": {
@@ -123,9 +123,9 @@
             "description": "Redux of Datastore from Common",
             "support": {
                 "issues": "https://github.com/netherphp/datastore/issues",
-                "source": "https://github.com/netherphp/datastore/tree/v0.0.1"
+                "source": "https://github.com/netherphp/datastore/tree/v0.0.3"
             },
-            "time": "2026-11-07T02:03:47+00:00"
+            "time": "2026-11-07T07:05:17+00:00"
         },
         {
             "name": "netherphp/filter",

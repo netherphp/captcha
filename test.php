@@ -9,5 +9,5 @@ var_dump($Cap);
 
 var_dump(Nether\Captcha::Validate(
 	$Cap->GetToken(),
-	'123456'
+	$Cap->GetKey()
 ));

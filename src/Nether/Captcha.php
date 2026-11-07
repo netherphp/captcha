@@ -13,21 +13,12 @@ use Exception;
 
 class Captcha {
 
-	protected string
-	$AlgoToken;
-
-	protected string
-	$AlgoHash;
-
-	protected int
-	$TimeToExpire;
-
-	protected string
-	$Issuer;
+	public Captcha\Config
+	$Config;
 
 	////////////////////////////////////////////////////////////////
 
-	protected ?string
+	protected string
 	$Key;
 
 	protected string
@@ -39,7 +30,7 @@ class Captcha {
 	public int
 	$WhenExpires;
 
-	public Datastore
+	public Captcha\Payload
 	$Payload;
 
 	public string
@@ -50,12 +41,7 @@ class Captcha {
 	public function
 	__Construct() {
 
-		$Config = static::Config();
-
-		$this->SetAlgoHash($Config['AlgoHash']);
-		$this->SetAlgoToken($Config['AlgoToken']);
-		$this->SetTimeToExpire($Config['TimeToExpire']);
-		$this->SetIssuer($Config['Issuer']);
+		$this->Config = new Captcha\Config;
 
 		return;
 	}
@@ -64,10 +50,30 @@ class Captcha {
 	////////////////////////////////////////////////////////////////
 
 	public function
+	SetKey(?string $Key):
+	static {
+
+		if($Key === NULL)
+		unset($this->Key);
+		else
+		$this->Key = $Key;
+
+		////////
+		
+		unset($this->Hash);
+		unset($this->WhenIssued);
+		unset($this->WhenExpires);
+		unset($this->Payload);
+		unset($this->Token);
+
+		return $this;
+	}
+
+	public function
 	SetAlgoHash(string $Algo):
 	static {
 
-		$this->AlgoHash = $Algo;
+		$this->Config->AlgoHash = $Algo;
 
 		return $this;
 	}
@@ -76,16 +82,7 @@ class Captcha {
 	SetAlgoToken(string $Algo):
 	static {
 
-		$this->AlgoToken = $Algo;
-
-		return $this;
-	}
-
-	public function
-	SetKey(?string $Key):
-	static {
-
-		$this->Key = $Key;
+		$this->Config->AlgoToken = $Algo;
 
 		return $this;
 	}
@@ -94,7 +91,7 @@ class Captcha {
 	SetIssuer(string $Who):
 	static {
 
-		$this->Issuer = $Who;
+		$this->Config->Issuer = $Who;
 
 		return $this;
 	}
@@ -103,7 +100,7 @@ class Captcha {
 	SetTimeToExpire(int $Seconds):
 	static {
 
-		$this->TimeToExpire = $Seconds;
+		$this->Config->TimeToExpire = $Seconds;
 
 		return $this;
 	}
@@ -141,7 +138,7 @@ class Captcha {
 
 	public function
 	GetPayload():
-	Datastore {
+	Captcha\Payload {
 
 		return $this->Payload;
 	}
@@ -165,7 +162,10 @@ class Captcha {
 
 		////////
 		
-		$this->Hash = hash($this->AlgoHash, $this->Key);
+		$this->Hash = hash(
+			$this->Config->AlgoHash,
+			$this->Key
+		);
 
 		return $this;
 	}
@@ -175,7 +175,7 @@ class Captcha {
 	static {
 
 		$this->WhenIssued = time();
-		$this->WhenExpires = $this->WhenIssued + $this->TimeToExpire;
+		$this->WhenExpires = $this->WhenIssued + $this->Config->TimeToExpire;
 
 		return $this;
 	}
@@ -184,11 +184,11 @@ class Captcha {
 	PreparePayload():
 	static {
 
-		$this->Payload = Datastore::New([
-			'iss' => $this->Issuer,
-			'iat' => $this->WhenIssued,
-			'exp' => $this->WhenExpires
-		]);
+		$this->Payload = new Captcha\Payload(
+			Issuer: $this->Config->Issuer,
+			IssuedAt: $this->WhenIssued,
+			Expires: $this->WhenExpires
+		);
 
 		return $this;
 	}
@@ -198,9 +198,9 @@ class Captcha {
 	static {
 
 		$this->Token = JWT\JWT::encode(
-			$this->Payload->Export(),
+			$this->Payload->ToPayload(),
 			$this->Hash,
-			$this->AlgoToken
+			$this->Config->AlgoToken
 		);
 
 		return $this;
@@ -223,31 +223,15 @@ class Captcha {
 	////////////////////////////////////////////////////////////////
 
 	static public function
-	Config(?iterable $Input=NULL):
-	Datastore {
-
-		$Config = Datastore::New([
-			'AlgoToken'    => 'HS512',
-			'AlgoHash'     => 'sha512',
-			'TimeToExpire' => 360,
-			'Issuer'       => 'netherphp/captcha'
-		]);
-
-		if($Input !== NULL)
-		$Config->Merge($Input);
-
-		return $Config;
-	}
-
-	////////////////////////////////////////////////////////////////
-
-	static public function
-	Key(int $Length=8):
+	Key():
 	string {
 
+		$Config = new Captcha\Config;
 		$Key = '';
 
-		for($Size = 0; $Size < $Length; $Size++)
+		////////
+
+		for($Size = 0; $Size < $Config->KeyLength; $Size++)
 		$Key .= match(TRUE) {
 			(random_int(0, 1) === 1)
 			=> range('0', '9')[random_int(0, 9)],
@@ -256,59 +240,70 @@ class Captcha {
 			=> range('A', 'Z')[random_int(0, 25)]
 		};
 
+		////////
+
 		return $Key;
 	}
 
 	static public function
-	Validate(string $Token, string $Key, ?iterable $Cfg=NULL):
+	Validate(string $Token, string $Key):
 	?bool {
 
-		$Config = static::Config($Cfg);
-		$Now = time();
+		$Config = new Captcha\Config;
 		$Hash = NULL;
 		$Err = NULL;
-
-		$Decode = new Datastore;
-		$Decode->SetImportFilter('iss', Filter\Text::Trimmed(...));
-		$Decode->SetImportFilter('iat', Filter\Type::Int(...));
-		$Decode->SetImportFilter('exp', Filter\Type::Int(...));
 
 		// try to decode the token they gave us with the key they gave us.
 
 		try {
-			$Hash = hash($Config['AlgoHash'], $Key);
-			$Ring = new JWT\Key($Hash, $Config['AlgoToken']);
+			$Hash = hash($Config->AlgoHash, $Key);
+			$Ring = new JWT\Key($Hash, $Config->AlgoToken);
 
-			$Decode->Import(get_object_vars(
+			Captcha\Payload::FromPayload(
 				JWT\JWT::decode($Token, $Ring)
-			));
+			);
 		}
 
 		catch(JWT\SignatureInvalidException $Err) {
-			// signature failure check is the correct response when the
+			// signature failure check is a valid response when the
 			// wrong key is supplied for that token.
+		}
+
+		catch(JWT\ExpiredException $Err) {
+			// being expired is a valid response if the user took way
+			// too long to submit this data.
 		}
 
 		////////
 
-		// decode error.
-
-		if($Err !== NULL)
+		if($Err instanceof JWT\SignatureInvalidException)
 		return FALSE;
 
-		// missing expire time error.
-
-		if(!$Decode->Has('exp'))
-		return FALSE;
-
-		// time expired error.
-
-		if($Decode['exp'] < $Now)
+		if($Err instanceof JWT\ExpiredException)
 		return FALSE;
 
 		////////		
 
 		return TRUE;
+	}
+
+	static public function
+	New():
+	static {
+
+		$Output = new static;
+
+		return $Output;
+	}
+
+	static public function
+	Fresh():
+	static {
+
+		$Output = new static;
+		$Output->Generate();
+
+		return $Output;
 	}
 
 };
