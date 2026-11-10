@@ -168,7 +168,7 @@ class Image {
 		$Font->setFont($this->GetPathToFont($FontName));
 		$Font->setFontSize($this->Height /2);
 		$Font->setFillColor(new ImagickPixel($Colour));
-		$Font->setGravity(Imagick::GRAVITY_NORTHWEST);
+		$Font->setGravity(Imagick::GRAVITY_CENTER);
 
 		$Size = $this->Img->queryFontMetrics($Font, $Text);
 
@@ -196,13 +196,14 @@ class Image {
 		);
 
 		$Tmp->rotateImage('transparent', $Rumbler->Rotate);
+		$Tmp->coalesceImages();
 
 		////////
 
 		$this->Img->compositeImage(
 			$Tmp, Imagick::COMPOSITE_BLEND,
-			(int)(($this->Width - $Tmp->getImageWidth()) / 2) + $Rumbler->X,
-			(int)(($this->Height - $Tmp->getImageHeight()) / 2) + $Rumbler->Y
+			(int)(($this->Width / 2) - ($Tmp->getImageWidth() / 2)) + $Rumbler->X,
+			(int)(($this->Height / 2) - ($Tmp->getImageHeight() / 2)) + $Rumbler->Y
 		);
 
 		return;
