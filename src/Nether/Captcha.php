@@ -161,6 +161,13 @@ class Captcha {
 	}
 
 	public function
+	GetImageBinary():
+	string {
+
+		return $this->Img->Render();
+	}
+
+	public function
 	GetImageEncoded():
 	string {
 

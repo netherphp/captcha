@@ -4,4 +4,4 @@ require('vendor/autoload.php');
 
 $Cap = Nether\Captcha::Fresh();
 
-var_dump($Cap->GetImageEncoded());
+file_put_contents('test.png', $Cap->GetImageBinary());
