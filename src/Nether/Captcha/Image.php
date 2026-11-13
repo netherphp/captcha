@@ -23,6 +23,9 @@ class Image {
 	protected string
 	$Font;
 
+	protected bool
+	$Wider;
+
 	protected string
 	$Text;
 
@@ -33,11 +36,12 @@ class Image {
 	////////////////////////////////////////////////////////////////
 
 	public function
-	__Construct(int $Width, int $Height, string $Font, string $Text) {
+	__Construct(int $Width, int $Height, string $Font, bool $Wider, string $Text) {
 
 		$this->Width = $Width;
 		$this->Height = $Height;
 		$this->Font = $Font;
+		$this->Wider = $Wider;
 		$this->Text = $Text;
 
 		//$this->Text = '0O1I';
@@ -70,55 +74,61 @@ class Image {
 		$Rumbler = new Rumbler;
 
 		$this->Img = new Imagick;
-		$this->Img->newImage($this->Width, $this->Height, 'black');
+		$this->Img->newImage($this->Width, $this->Height, '#333333');
 		$this->Img->setImageFormat('png');
 
 		$RGB = new Datastore([
 			fn()=> $this->GenerateDrawTextLayer(
-				Captcha::Key(), $this->Font, '#FF000033',
-				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(2.0)
+				Captcha::Key(), $this->Font, '#FF000044',
+				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(3.0)
 			),
 			fn()=> $this->GenerateDrawTextLayer(
-				Captcha::Key(), $this->Font, '#00FF0033',
-				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(2.0)
+				Captcha::Key(), $this->Font, '#00FF0044',
+				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(3.0)
 			),
 			fn()=> $this->GenerateDrawTextLayer(
-				Captcha::Key(), $this->Font, '#0000FF33',
-				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(2.0)
+				Captcha::Key(), $this->Font, '#0000FF44',
+				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(3.0)
 			)
 		]);
 
 		$CYM = new Datastore([
 			fn()=> $this->GenerateDrawTextLayer(
-				$this->Text, $this->Font, '#00FFFF44',
-				$Rumbler->SetPosition(0, 0)->SetRotation(0.0)->SetScale(1.0)
+				$this->Text, $this->Font, '#00FFFF20',
+				$Rumbler->SetPosition(0, 0)->SetRotation(0.0)->SetScale(1.0),
+				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
-				$this->Text, $this->Font, '#FFFF0044',
-				$Rumbler->SetPosition(-3, -3)->SetRotation(-1.0)->SetScale(1.0)
+				$this->Text, $this->Font, '#FFFF0020',
+				$Rumbler->SetPosition(-2, -2)->SetRotation(-1.0)->SetScale(1.0),
+				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
-				$this->Text, $this->Font, '#FF00FF44',
-				$Rumbler->SetPosition(0, -3)->SetRotation(-2.0)->SetScale(1.0)
+				$this->Text, $this->Font, '#FF00FF20',
+				$Rumbler->SetPosition(0, -3)->SetRotation(-2.0)->SetScale(1.0),
+				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
-				$this->Text, $this->Font, '#00FFFF44',
-				$Rumbler->SetPosition(3, -3)->SetRotation(0.0)->SetScale(1.0)
+				$this->Text, $this->Font, '#00FFFF20',
+				$Rumbler->SetPosition(3, -3)->SetRotation(0.0)->SetScale(1.0),
+				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
-				$this->Text, $this->Font, '#FFFF0044',
-				$Rumbler->SetPosition(3, 0)->SetRotation(1.0)->SetScale(1.0)
+				$this->Text, $this->Font, '#FFFF0020',
+				$Rumbler->SetPosition(3, 0)->SetRotation(1.0)->SetScale(1.0),
+				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
-				$this->Text, $this->Font, '#FF00FF44',
-				$Rumbler->SetPosition(3, 3)->SetRotation(2.0)->SetScale(1.0)
+				$this->Text, $this->Font, '#FF00FF20',
+				$Rumbler->SetPosition(2, 2)->SetRotation(2.0)->SetScale(1.0),
+				FALSE
 			)
 		]);
 
 		$RGB->Shuffle()->Each(function(callable $Func) {
 			$Func();
 			return;
-		});	
+		});
 
 		$this->Img->modulateImage(100.0, 75.0, 1.0);
 		$this->Img->addNoiseImage(Imagick::NOISE_GAUSSIAN, Imagick::CHANNEL_RED);
@@ -146,7 +156,7 @@ class Image {
 	Render():
 	string {
 
-		$this->Img->setImageCompressionQuality(95); 
+		$this->Img->setImageCompressionQuality(95);
 		$this->Img->setOption('png:compression-level', '9');
 
 		return $this->Img->getImageBlob();
@@ -156,13 +166,17 @@ class Image {
 	////////////////////////////////////////////////////////////////
 
 	protected function
-	GenerateDrawTextLayer(string $Text, string $FontName, string $Colour, Rumbler $Rumbler):
+	GenerateDrawTextLayer(string $Text, string $FontName, string $Colour, Rumbler $Rumbler, bool $Wider=FALSE):
 	void {
 
 		if(!str_contains($FontName, '.'))
 		$FontName .= '.ttf';
 
 		////////
+
+		if($Wider) {
+			$Text = join(' ', mb_str_split($Text, 1));
+		}
 
 		$Font = new ImagickDraw;
 		$Font->setFont($this->GetPathToFont($FontName));

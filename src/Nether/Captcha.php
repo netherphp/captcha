@@ -6,6 +6,9 @@ namespace Nether;
 use Firebase\JWT;
 use Nether\Datastore;
 use Nether\Filter;
+
+use Nether\Meta\Code\Info;
+use Nether\Meta\Code\Added;
 use Exception;
 
 ################################################################################
@@ -26,7 +29,7 @@ class Captcha {
 
 	protected int
 	$WhenIssued;
-	
+
 	public int
 	$WhenExpires;
 
@@ -62,7 +65,7 @@ class Captcha {
 		$this->Key = $Key;
 
 		////////
-		
+
 		unset($this->Hash);
 		unset($this->WhenIssued);
 		unset($this->WhenExpires);
@@ -146,6 +149,36 @@ class Captcha {
 		return $this->Payload;
 	}
 
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Info('Returns the configured field name for labeling the input code.')]
+	#[Added('2026-11-13')]
+	public function
+	GetCodeFieldName():
+	string {
+
+		return $this->Config->FieldNameCode;
+	}
+
+	#[Info('Returns CSS useful for styling the front end input.')]
+	#[Added('2026-11-13')]
+	public function
+	GetCodeFieldStyleCSS():
+	string {
+
+		$Style = sprintf(
+			'width:%dpx;',
+			$this->Config->ImageWidth
+		);
+
+		return $Style;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Info('Returns the Token (JWT)')]
 	public function
 	GetToken():
 	string {
@@ -153,12 +186,38 @@ class Captcha {
 		return $this->Token;
 	}
 
+	#[Info('Returns Base64 encoded version of the token.')]
+	#[Added('2026-11-13')]
 	public function
-	GetTokenEncode():
+	GetTokenEncoded():
 	string {
 
 		return base64_encode($this->GetToken());
 	}
+
+	#[Info('Returns GetTokenEncoded but only if not hardened so that the front end can think less.')]
+	#[Added('2026-11-13')]
+	public function
+	GetTokenForForm():
+	string {
+
+		if($this->Config->Hardened)
+		return '';
+
+		return $this->GetTokenEncoded();
+	}
+
+	#[Info('Returns the configured field name for labeling the token.')]
+	#[Added('2026-11-13')]
+	public function
+	GetTokenFieldName():
+	string {
+
+		return $this->Config->FieldNameToken;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
 
 	public function
 	GetImageBinary():
@@ -175,6 +234,20 @@ class Captcha {
 			'data:image/png;base64,%s',
 			base64_encode($this->Img->Render())
 		);
+	}
+
+	#[Info('Returns CSS useful for styling the front end image render.')]
+	#[Added('2026-11-13')]
+	public function
+	GetImageStyleCSS():
+	string {
+
+		$Style = sprintf(
+			'width:%dpx;',
+			$this->Config->ImageWidth
+		);
+
+		return $Style;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -194,6 +267,27 @@ class Captcha {
 		return $this;
 	}
 
+	#[Info('Push the token into the PHP session.')]
+	#[Added('2026-11-13')]
+	public function
+	PushToSession():
+	static {
+
+		if(!isset($this->Token))
+		throw new Captcha\Error\NotGenerated;
+
+		if(!is_array($_SESSION))
+		throw new Captcha\Error\NoSession;
+
+		////////
+
+		$Output = static::FilterOutputToken($this->Token);
+
+		$_SESSION[$this->Config->FieldNameToken] = $Output;
+
+		return $this;
+	}
+
 	////////////////////////////////////////////////////////////////
 
 	protected function
@@ -204,7 +298,7 @@ class Captcha {
 		$this->Key = static::Key();
 
 		////////
-		
+
 		$this->Hash = hash(
 			$this->Config->AlgoHash,
 			$this->Key
@@ -257,6 +351,7 @@ class Captcha {
 			$this->Config->ImageWidth,
 			$this->Config->ImageHeight,
 			$this->Config->ImageFont,
+			$this->Config->ImageWider,
 			$this->Key
 		);
 
@@ -286,14 +381,19 @@ class Captcha {
 
 		////////
 
-		return $Key;
+		return strtolower($Key);
 	}
 
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Info('Validate Token can be checked by specified Code.')]
 	static public function
-	Validate(string $Token, string $Key, ?Captcha\Config $Config=NULL):
-	?bool {
+	Validate(string $Token, string $Code, ?Captcha\Config $Config=NULL):
+	bool {
 
 		$Config = $Config ?? new Captcha\Config;
+		$Key = strtolower($Code);
 		$Hash = NULL;
 		$Err = NULL;
 
@@ -331,9 +431,53 @@ class Captcha {
 		if($Err instanceof JWT\ExpiredException)
 		return FALSE;
 
-		////////		
+		////////
 
 		return TRUE;
+	}
+
+	#[Info('Handle validating input that is "raw" from the source.')]
+	static public function
+	ValidateFromInput(iterable $Input, ?Captcha\Config $Config=NULL):
+	bool {
+
+		$Config = $Config ?? new Captcha\Config;
+		$Session = Datastore::FromInput($_SESSION);
+
+		$Post = Datastore::FromInput($Input, [
+			$Config->FieldNameToken
+			=> static::FilterInputToken(...),
+			$Config->FieldNameCode
+			=> Filter\Text::TrimmedNullable(...)
+		]);
+
+		// when in hardened mode the only trusted source of the token
+		// is from the PHP session.
+
+		if($Config->Hardened) {
+			($Post)
+			->Unset($Config->FieldNameToken)
+			->Set(
+				$Config->FieldNameToken,
+				$Session->Get($Config->FieldNameToken)
+			);
+		}
+
+		////////
+
+		if(!$Post->Get($Config->FieldNameToken))
+		return FALSE;
+
+		if(!$Post->Get($Config->FieldNameCode))
+		return FALSE;
+
+		////////
+
+		return static::Validate(
+			$Post[$Config->FieldNameToken],
+			$Post[$Config->FieldNameCode],
+			$Config
+		);
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -355,7 +499,49 @@ class Captcha {
 		$Output = new static($Config);
 		$Output->Generate();
 
+		if($Output->Config->Hardened)
+		$Output->PushToSession();
+
 		return $Output;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Info('Generate output to treat as invalidated input later.')]
+	static public function
+	FilterOutputToken(string $Token):
+	?string {
+
+		$Out = base64_encode($Token);
+
+		if(!$Out)
+		return NULL;
+
+		return $Out;
+	}
+
+	#[Info('Treat input as unvalidated input.')]
+	static public function
+	FilterInputToken(string $Input):
+	?string {
+
+		$Out = Filter\Text::TrimmedNullable($Input);
+
+		if(!$Out)
+		return NULL;
+
+		////////
+
+		if(is_string($Out))
+		$Out = base64_decode($Out, TRUE);
+
+		if(!$Out)
+		return NULL;
+
+		////////
+
+		return $Out;
 	}
 
 };
