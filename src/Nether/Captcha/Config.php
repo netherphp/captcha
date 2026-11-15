@@ -18,7 +18,7 @@ class Config {
 	const
 	FontDefaultCharset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
 	FontBoldCharset    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-	FontCrispCharset   = 'ABCDEFGHIJKLMNPRSTUVWXYZ123456789';
+	FontCrispCharset   = 'ABCDEFGHIJKLMNPRTUVWXYZ12346789';
 
 	#[Info('Hardened mode will not send the Token to the client, but would mess with someone if they had multiple tabs open.')]
 	public bool
