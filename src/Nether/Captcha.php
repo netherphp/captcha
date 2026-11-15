@@ -389,7 +389,7 @@ class Captcha {
 
 	#[Info('Validate Token can be checked by specified Code.')]
 	static public function
-	Validate(string $Token, string $Code, ?Captcha\Config $Config=NULL):
+	Validate(string $Token, string $Code, bool $ThrowFail=FALSE, ?Captcha\Config $Config=NULL):
 	bool {
 
 		$Config = $Config ?? new Captcha\Config;
@@ -425,11 +425,20 @@ class Captcha {
 
 		////////
 
-		if($Err instanceof JWT\SignatureInvalidException)
-		return FALSE;
+		if($Err instanceof JWT\SignatureInvalidException) {
+			if($ThrowFail)
+			throw new Captcha\Error\TokenCodeIncorrect;
 
-		if($Err instanceof JWT\ExpiredException)
-		return FALSE;
+			return FALSE;
+		}
+		
+
+		if($Err instanceof JWT\ExpiredException) {
+			if($ThrowFail)
+			throw new Captcha\Error\TokenExpired;
+			
+			return FALSE;
+		}
 
 		////////
 
@@ -438,7 +447,7 @@ class Captcha {
 
 	#[Info('Handle validating input that is "raw" from the source.')]
 	static public function
-	ValidateFromInput(iterable $Input, ?Captcha\Config $Config=NULL):
+	ValidateFromInput(iterable $Input, bool $ThrowFail=FALSE, ?Captcha\Config $Config=NULL):
 	bool {
 
 		$Config = $Config ?? new Captcha\Config;
@@ -476,6 +485,7 @@ class Captcha {
 		return static::Validate(
 			$Post[$Config->FieldNameToken],
 			$Post[$Config->FieldNameCode],
+			$ThrowFail,
 			$Config
 		);
 	}
