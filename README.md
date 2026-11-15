@@ -42,12 +42,14 @@ $Cap->Generate();
 	</div>
 	<div>
 		<p>Enter code from above image.</p>
-		<input type="text" name="nether-captcha-input" />
-		<input type="hidden" name="nether-captcha-token" value="<?php echo $Cap->GetTokenEncoded() ?>" />
+		<input type="text" name="<?php echo $Cap->GetCodeFieldName() ?>" />
+		<input type="hidden" name="<?php echo $Cap->GetTokenFieldName() ?>" value="<?php echo $Cap->GetTokenEncoded() ?>" />
 	</div>
 </div>
-
 ```
+
+> NOTE: the hidden token field may be omitted when used with Hardened mode
+> is enabled, which is also the default.
 
 ```php
 // auto validate found captcha within supplied inputs.
