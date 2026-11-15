@@ -77,18 +77,21 @@ class Image {
 		$this->Img->newImage($this->Width, $this->Height, '#333333');
 		$this->Img->setImageFormat('png');
 
+		$BmpSm = (int)($this->Width * 0.01);
+		$BmpMd = (int)($this->Width * 0.015);
+
 		$RGB = new Datastore([
 			fn()=> $this->GenerateDrawTextLayer(
 				Captcha::Key(), $this->Font, '#FF000044',
-				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(3.0)
+				$Rumbler->BumpPosition($BmpMd)->BumpRotation(2.0)->BumpScale(3.0)
 			),
 			fn()=> $this->GenerateDrawTextLayer(
 				Captcha::Key(), $this->Font, '#00FF0044',
-				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(3.0)
+				$Rumbler->BumpPosition($BmpMd)->BumpRotation(2.0)->BumpScale(3.0)
 			),
 			fn()=> $this->GenerateDrawTextLayer(
 				Captcha::Key(), $this->Font, '#0000FF44',
-				$Rumbler->BumpPosition(1.0)->BumpRotation(2.0)->BumpScale(3.0)
+				$Rumbler->BumpPosition($BmpMd)->BumpRotation(2.0)->BumpScale(3.0)
 			)
 		]);
 
@@ -100,27 +103,27 @@ class Image {
 			),
 			fn()=> $this->GenerateDrawTextLayer(
 				$this->Text, $this->Font, '#FFFF0020',
-				$Rumbler->SetPosition(-2, -2)->SetRotation(-1.0)->SetScale(1.0),
+				$Rumbler->SetPosition(-$BmpSm, -$BmpSm)->SetRotation(-1.0)->SetScale(1.0),
 				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
 				$this->Text, $this->Font, '#FF00FF20',
-				$Rumbler->SetPosition(0, -3)->SetRotation(-2.0)->SetScale(1.0),
+				$Rumbler->SetPosition(0, -$BmpSm)->SetRotation(-2.0)->SetScale(1.0),
 				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
 				$this->Text, $this->Font, '#00FFFF20',
-				$Rumbler->SetPosition(3, -3)->SetRotation(0.0)->SetScale(1.0),
+				$Rumbler->SetPosition($BmpSm, -$BmpSm)->SetRotation(0.0)->SetScale(1.0),
 				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
 				$this->Text, $this->Font, '#FFFF0020',
-				$Rumbler->SetPosition(3, 0)->SetRotation(1.0)->SetScale(1.0),
+				$Rumbler->SetPosition($BmpMd, 0)->SetRotation(1.0)->SetScale(1.0),
 				FALSE
 			),
 			fn()=> $this->GenerateDrawTextLayer(
 				$this->Text, $this->Font, '#FF00FF20',
-				$Rumbler->SetPosition(2, 2)->SetRotation(2.0)->SetScale(1.0),
+				$Rumbler->SetPosition($BmpMd, $BmpMd)->SetRotation(2.0)->SetScale(1.0),
 				FALSE
 			)
 		]);

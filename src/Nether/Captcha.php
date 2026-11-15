@@ -276,7 +276,7 @@ class Captcha {
 		if(!isset($this->Token))
 		throw new Captcha\Error\NotGenerated;
 
-		if(!is_array($_SESSION))
+		if(!isset($_SESSION))
 		throw new Captcha\Error\NoSession;
 
 		////////
@@ -499,8 +499,10 @@ class Captcha {
 		$Output = new static($Config);
 		$Output->Generate();
 
-		if($Output->Config->Hardened)
-		$Output->PushToSession();
+		if(PHP_SAPI !== 'cli') {
+			if($Output->Config->Hardened)
+			$Output->PushToSession();
+		}
 
 		return $Output;
 	}
