@@ -20,7 +20,7 @@ extends TestCase {
 
 		// i do not have a reason for doing this other than wanting to be
 		// sure that my third party isn't being a pain in the ass. firebase
-		// jwt has historically been annoying at times i wasn't even 
+		// jwt has historically been annoying at times i wasn't even
 		// directly using it like in this project.
 
 		$Hash = hash('sha512', 'test');
@@ -110,7 +110,7 @@ extends TestCase {
 	void {
 
 		$Cap = Captcha::Fresh();
-		
+
 		$this->assertSame(
 			$Cap->Config->KeyLength,
 			strlen($Cap->GetKey())
@@ -131,13 +131,26 @@ extends TestCase {
 	FailBeacuseIncorrectKey():
 	void {
 
+		$Err = NULL;
+
+		////////
+
 		$Cap = Captcha::New();
 		$Cap->Generate();
+
+		////////
 
 		$this->assertFalse(Captcha::Validate(
 			$Cap->GetToken(),
 			'chumbawamba'
 		));
+
+		////////
+
+		try { Captcha::Validate($Cap->GetToken(), 'fatboy slim', TRUE); }
+		catch(Exception $Err) { }
+
+		$this->assertInstanceOf(Captcha\Error\TokenCodeIncorrect::class, $Err);
 
 		return;
 	}
@@ -147,14 +160,27 @@ extends TestCase {
 	FailBeacuseExpired():
 	void {
 
+		$Err = NULL;
+
+		////////
+
 		$Cap = Captcha::New();
 		$Cap->SetTimeToExpire(-30);
 		$Cap->Generate();
+
+		////////
 
 		$this->assertFalse(Captcha::Validate(
 			$Cap->GetToken(),
 			$Cap->GetKey()
 		));
+
+		////////
+
+		try { Captcha::Validate($Cap->GetToken(), 'fatboy slim', TRUE); }
+		catch(Exception $Err) { }
+
+		$this->assertInstanceOf(Captcha\Error\TokenCodeIncorrect::class, $Err);
 
 		return;
 	}
