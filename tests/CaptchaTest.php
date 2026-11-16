@@ -604,7 +604,7 @@ extends TestCase {
 		$_SESSION[$Test->GetTokenFieldName()] = $Test->GetTokenEncoded();
 		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
-		$_SESSION[$Test->GetCodeFieldName()] = '';
+		$Data[$Test->GetCodeFieldName()] = '';
 		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
 		$Data[$Test->GetCodeFieldName()] = $Test->GetKey();
