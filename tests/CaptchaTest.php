@@ -585,31 +585,30 @@ extends TestCase {
 	MethodValidateFromInput():
 	void {
 
-		if(!array_key_exists('_SESSION', $GLOBALS))
-		$GLOBALS['_SESSION'] = [];
-
-		$Test = Captcha::Fresh();
+		$Test = new Captcha;
+		$Test->Generate();
 
 		////////
 
-		// fail because both fields are missing.
+		if(!array_key_exists('_SESSION', $GLOBALS))
+		$GLOBALS['_SESSION'] = [];
+
+		////////
 
 		$Data = [];
 		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
-		$Data[$Test->GetTokenFieldName()] = '';
+		$_SESSION[$Test->GetTokenFieldName()] = '';
 		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
-		// fail beacuse one field is still empty.
-
-		$Data[$Test->GetTokenFieldName()] = $Test->GetTokenEncoded();
+		$_SESSION[$Test->GetTokenFieldName()] = $Test->GetTokenEncoded();
 		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
-		// pass because all the data is there.
+		$_SESSION[$Test->GetCodeFieldName()] = '';
+		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
 		$Data[$Test->GetCodeFieldName()] = $Test->GetKey();
 		$this->assertTrue(Captcha::ValidateFromInput($Data));
-
 
 		return;
 	}
