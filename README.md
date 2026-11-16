@@ -8,16 +8,25 @@ A locally produced Captcha.
 
 ## Features ####################################################################
 
+* Generates captcha image.
 * Configurable code length.
 * Configurable time sensitivity.
-* Generates captcha image.
-* API for validating token and codes.
+* Simple API for validating token and codes.
 
-## Todo ########################################################################
+## Requirements ################################################################
 
-* Include front end templating.
+* PHP 8.5+
+* PHP Imagick
 
-## Usage Example ###############################################################
+## Install #####################################################################
+
+`$ composer require netherphp/captcha`
+
+## Usage #######################################################################
+
+Get a new fully rendered captcha using the ::Fresh() factory method. Get a new
+captcha where you can set settings before rendering with the ::New() factory
+method.
 
 ```php
 <?php
@@ -35,6 +44,12 @@ $Cap->Generate();
 ?>
 ```
 
+Render the image in the form you want to protect with the captcha.
+
+The hidden Token field can be omitted when `Hardened` mode is enabled, which is
+also the default, as the token will be stored in the PHP Session. Otherwise
+that field is needed to bounce the token back and forth.
+
 ```html
 <div>
 	<div>
@@ -43,17 +58,15 @@ $Cap->Generate();
 	<div>
 		<p>Enter code from above image.</p>
 		<input type="text" name="<?php echo $Cap->GetCodeFieldName() ?>" />
-		<input type="hidden" name="<?php echo $Cap->GetTokenFieldName() ?>" value="<?php echo $Cap->GetTokenEncoded() ?>" />
+		<input type="hidden" name="<?php echo $Cap->GetTokenFieldName() ?>" value="<?php echo $Cap->GetTokenForForm() ?>" />
 	</div>
 </div>
 ```
 
-> NOTE: the hidden token field may be omitted when used with Hardened mode
-> is enabled, which is also the default.
+Use the `::ValidateFromInput()` method to automatically find the captcha fields
+from a dump of input with considerations handling the raw input automatically.
 
 ```php
-// auto validate found captcha within supplied inputs.
-
 $CaptchaOK = Nether\Captcha::ValidateFromInput($_POST);
 
 if(!$CaptchaOK) {
@@ -62,9 +75,9 @@ if(!$CaptchaOK) {
 }
 ```
 
-```php
-// manual validate known captcha data.
+Use the `::Validate()` method to manually validate known token and codes.
 
+```php
 $CaptchaOK = Nether\Captcha::Validate(
 	$_POST['nether-captcha-token'],
 	$_POST['nether-captcha-code']
@@ -75,3 +88,7 @@ if(!$CaptchaOK) {
 	return;
 }
 ```
+
+## Todo ########################################################################
+
+* Include front end templating.
