@@ -597,6 +597,9 @@ extends TestCase {
 		$Data = [];
 		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
+		$Data[$Test->GetTokenFieldName()] = '';
+		$this->assertFalse(Captcha::ValidateFromInput($Data));
+
 		// fail beacuse one field is still empty.
 
 		$Data[$Test->GetTokenFieldName()] = $Test->GetTokenEncoded();
