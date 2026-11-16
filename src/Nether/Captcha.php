@@ -79,6 +79,15 @@ class Captcha {
 	SetAlgoHash(string $Algo):
 	static {
 
+		$Supported = Datastore::FromInput(hash_algos());
+
+		////////
+
+		if(!$Supported->HasValue($Algo))
+		throw new Captcha\Error\AlgoUnsupported($Algo);
+
+		////////
+
 		$this->Config->AlgoHash = $Algo;
 
 		return $this;
@@ -87,6 +96,15 @@ class Captcha {
 	public function
 	SetAlgoToken(string $Algo):
 	static {
+
+		$Supported = Datastore::FromInput(JWT\JWT::$supported_algs);
+
+		////////
+
+		if(!$Supported->Has($Algo))
+		throw new Captcha\Error\AlgoUnsupported($Algo);
+
+		////////
 
 		$this->Config->AlgoToken = $Algo;
 
@@ -122,10 +140,31 @@ class Captcha {
 	}
 
 	public function
+	GetAlgoHash():
+	string {
+
+		return $this->Config->AlgoHash;
+	}
+
+	public function
+	GetAlgoToken():
+	string {
+
+		return $this->Config->AlgoToken;
+	}
+
+	public function
 	GetHash():
 	string {
 
 		return $this->Hash;
+	}
+
+	public function
+	GetIssuer():
+	string {
+
+		return $this->Config->Issuer;
 	}
 
 	public function
@@ -431,12 +470,12 @@ class Captcha {
 
 			return FALSE;
 		}
-		
+
 
 		if($Err instanceof JWT\ExpiredException) {
 			if($ThrowFail)
 			throw new Captcha\Error\TokenExpired;
-			
+
 			return FALSE;
 		}
 

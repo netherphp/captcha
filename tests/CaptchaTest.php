@@ -68,6 +68,81 @@ extends TestCase {
 
 	#[Test]
 	public function
+	MethodSetAlgoHash():
+	void {
+
+		$Err = NULL;
+		$Cap = new Captcha;
+
+		////////
+
+		$Cap->SetAlgoHash('sha256');
+		$this->assertEquals('sha256', $Cap->GetAlgoHash());
+
+		$Cap->SetAlgoHash('md5');
+		$this->assertEquals('md5', $Cap->GetAlgoHash());
+
+		////////
+
+		try { $Cap->SetAlgoHash('qwertyasdf'); }
+		catch(Exception $Err) { }
+
+		$this->assertInstanceOf(Captcha\Error\AlgoUnsupported::class, $Err);
+
+		/////////
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodSetAlgoToken():
+	void {
+
+		$Err = NULL;
+		$Cap = new Captcha;
+
+		////////
+
+		$Cap->SetAlgoToken('ES256');
+		$this->assertEquals('ES256', $Cap->GetAlgoToken());
+
+		$Cap->SetAlgoToken('ES384');
+		$this->assertEquals('ES384', $Cap->GetAlgoToken());
+
+		////////
+
+		try { $Cap->SetAlgoToken('qwertyasdf'); }
+		catch(Exception $Err) { }
+
+		$this->assertInstanceOf(Captcha\Error\AlgoUnsupported::class, $Err);
+
+		/////////
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodSetIssuer():
+	void {
+
+		$Cap = new Captcha;
+		$Default = new Captcha\Config;
+
+		$this->assertEquals($Default->Issuer, $Cap->GetIssuer());
+
+		$Cap->SetIssuer('majdak.net');
+		$this->assertEquals('majdak.net', $Cap->GetIssuer());
+
+		return;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Test]
+	public function
 	FromConstructor():
 	void {
 
@@ -177,10 +252,10 @@ extends TestCase {
 
 		////////
 
-		try { Captcha::Validate($Cap->GetToken(), 'fatboy slim', TRUE); }
+		try { Captcha::Validate($Cap->GetToken(), $Cap->GetKey(), TRUE); }
 		catch(Exception $Err) { }
 
-		$this->assertInstanceOf(Captcha\Error\TokenCodeIncorrect::class, $Err);
+		$this->assertInstanceOf(Captcha\Error\TokenExpired::class, $Err);
 
 		return;
 	}
