@@ -138,6 +138,65 @@ extends TestCase {
 		return;
 	}
 
+	#[Test]
+	public function
+	MethodGetHash():
+	void {
+
+		$Cap = new Captcha;
+		$Err = NULL;
+
+		try { $Cap->GetHash(); }
+		catch(Exception $Err) { }
+		$this->assertInstanceOf(Captcha\Error\NotGenerated::class, $Err);
+
+		$Cap->Generate();
+		$this->assertEquals(
+			hash($Cap->GetAlgoHash(), $Cap->GetKey()),
+			$Cap->GetHash()
+		);
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodGetWhenIssued():
+	void {
+
+		$Now = time();
+		$Cap = new Captcha;
+		$Err = NULL;
+
+		try { $Cap->GetWhenIssued(); }
+		catch(Exception $Err) { }
+		$this->assertInstanceOf(Captcha\Error\NotGenerated::class, $Err);
+
+		$Cap->Generate();
+		$this->assertGreaterThanOrEqual($Now, $Cap->GetWhenIssued());
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodGetWhenExpire():
+	void {
+
+		$Now = time();
+		$Cap = new Captcha;
+		$Err = NULL;
+
+		try { $Cap->GetWhenExpire(); }
+		catch(Exception $Err) { }
+		$this->assertInstanceOf(Captcha\Error\NotGenerated::class, $Err);
+
+		$Cap->Generate();
+		$this->assertGreaterThanOrEqual($Now, $Cap->GetWhenExpire());
+
+		return;
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 

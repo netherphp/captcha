@@ -157,6 +157,9 @@ class Captcha {
 	GetHash():
 	string {
 
+		if(!isset($this->Hash))
+		throw new Captcha\Error\NotGenerated;
+
 		return $this->Hash;
 	}
 
@@ -171,12 +174,18 @@ class Captcha {
 	GetWhenIssued():
 	int {
 
+		if(!isset($this->WhenIssued))
+		throw new Captcha\Error\NotGenerated;
+
 		return $this->WhenIssued;
 	}
 
 	public function
 	GetWhenExpire():
 	int {
+
+		if(!isset($this->WhenExpires))
+		throw new Captcha\Error\NotGenerated;
 
 		return $this->WhenExpires;
 	}
