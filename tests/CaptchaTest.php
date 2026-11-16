@@ -296,6 +296,23 @@ extends TestCase {
 		return;
 	}
 
+	#[Test]
+	public function
+	MethodGetImageStyleCSS():
+	void {
+
+		$Conf = new Captcha\Config;
+		$Test = new Captcha;
+
+		$Style = $Test->GetImageStyleCSS();
+
+		$this->assertTrue(str_contains($Style, sprintf(
+			'width:%dpx;', $Conf->ImageWidth
+		)));
+
+		return;
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -464,6 +481,88 @@ extends TestCase {
 		$Token = $Test->GetTokenForForm();
 		$this->assertFalse($Test->Config->Hardened);
 		$this->assertEquals($Test->GetTokenEncoded(), $Token);
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodGetImage():
+	void {
+
+		$Test = new Captcha;
+		$Error = NULL;
+
+		////////
+
+		try { $Test->GetImageBinary(); }
+		catch(Exception $Error) { }
+
+		$this->assertInstanceOf(
+			Captcha\Error\NotGenerated::class,
+			$Error
+		);
+
+		////////
+
+		$Test->Generate();
+		$Blob = $Test->GetImageBinary();
+		$this->assertTrue(str_starts_with($Blob, "\x89PNG"));
+
+		$Blob = $Test->GetImageEncoded();
+		$this->assertTrue(str_starts_with($Blob, 'data:image/png;base64,iVBORw'));
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodPushToSession():
+	void {
+
+		$Test = new Captcha;
+		$Error = NULL;
+
+		////////
+
+		try { $Test->PushToSession()(); }
+		catch(Exception $Error) { }
+		$this->assertInstanceOf(
+			Captcha\Error\NotGenerated::class,
+			$Error
+		);
+
+		////////
+
+		// test assuming sessions are disabled.
+		// force nuke the session global to make sure.
+
+		if(array_key_exists('_SESSION', $GLOBALS))
+		unset($GLOBALS['_SESSION']);
+
+		$Test->Generate();
+		try { $Test->PushToSession(); }
+		catch(Exception $Error) { }
+		$this->assertInstanceOf(
+			Captcha\Error\NoSession::class,
+			$Error
+		);
+
+		////////
+
+		// test assuming sessions are enabled.
+		// force rebuild the session global to make sure.
+
+		$GLOBALS['_SESSION'] = [];
+		$Error = NULL;
+
+		try { $Test->PushToSession(); }
+		catch(Exception $Error) { }
+		$this->assertNull($Error);
+
+		$this->assertTrue(isset(
+			$_SESSION[$Test->GetTokenFieldName()]
+		));
 
 		return;
 	}

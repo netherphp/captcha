@@ -295,12 +295,18 @@ class Captcha {
 	GetImageBinary():
 	string {
 
+		if(!isset($this->Img))
+		throw new Captcha\Error\NotGenerated;
+
 		return $this->Img->Render();
 	}
 
 	public function
 	GetImageEncoded():
 	string {
+
+		if(!isset($this->Img))
+		throw new Captcha\Error\NotGenerated;
 
 		return sprintf(
 			'data:image/png;base64,%s',
