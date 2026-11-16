@@ -129,6 +129,24 @@ class Captcha {
 		return $this;
 	}
 
+	public function
+	SetCodeFieldName(string $Name):
+	static {
+
+		$this->Config->FieldNameCode = $Name;
+
+		return $this;
+	}
+
+	public function
+	SetTokenFieldName(string $Name):
+	static {
+
+		$this->Config->FieldNameToken = $Name;
+
+		return $this;
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -194,6 +212,9 @@ class Captcha {
 	GetPayload():
 	Captcha\Payload {
 
+		if(!isset($this->Payload))
+		throw new Captcha\Error\NotGenerated;
+
 		return $this->Payload;
 	}
 
@@ -230,6 +251,9 @@ class Captcha {
 	public function
 	GetToken():
 	string {
+
+		if(!isset($this->Token))
+		throw new Captcha\Error\NotGenerated;
 
 		return $this->Token;
 	}

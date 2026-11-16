@@ -140,6 +140,60 @@ extends TestCase {
 
 	#[Test]
 	public function
+	MethodSetCodeFieldName():
+	void {
+
+		$Conf = new Captcha\Config;
+		$Test = new Captcha;
+
+		////////
+
+		$this->assertEquals(
+			$Conf->FieldNameCode,
+			$Test->GetCodeFieldName()
+		);
+
+		////////
+
+		$Test->SetCodeFieldName('code-field-name');
+
+		$this->assertEquals(
+			'code-field-name',
+			$Test->GetCodeFieldName()
+		);
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodSetTokenFieldName():
+	void {
+
+		$Conf = new Captcha\Config;
+		$Test = new Captcha;
+
+		////////
+
+		$this->assertEquals(
+			$Conf->FieldNameToken,
+			$Test->GetTokenFieldName()
+		);
+
+		////////
+
+		$Test->SetTokenFieldName('token-field-name');
+
+		$this->assertEquals(
+			'token-field-name',
+			$Test->GetTokenFieldName()
+		);
+
+		return;
+	}
+
+	#[Test]
+	public function
 	MethodGetHash():
 	void {
 
@@ -193,6 +247,51 @@ extends TestCase {
 
 		$Cap->Generate();
 		$this->assertGreaterThanOrEqual($Now, $Cap->GetWhenExpire());
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodGetPayload():
+	void {
+
+		$Cap = new Captcha;
+		$Err = NULL;
+
+		////////
+
+		try { $Cap->GetPayload(); }
+		catch(Exception $Err) { }
+		$this->assertInstanceOf(
+			Captcha\Error\NotGenerated::class,
+			$Err
+		);
+
+		////////
+
+		$Cap->Generate();
+		$this->assertInstanceOf(
+			Captcha\Payload::class,
+			$Cap->GetPayload()
+		);
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodGetCodeFieldStyleCSS():
+	void {
+
+		$Conf = new Captcha\Config;
+		$Test = new Captcha;
+
+		$Style = $Test->GetCodeFieldStyleCSS();
+
+		$this->assertTrue(str_contains($Style, sprintf(
+			'width:%dpx;', $Conf->ImageWidth
+		)));
 
 		return;
 	}
@@ -315,6 +414,56 @@ extends TestCase {
 		catch(Exception $Err) { }
 
 		$this->assertInstanceOf(Captcha\Error\TokenExpired::class, $Err);
+
+		return;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Test]
+	public function
+	MethodGetToken():
+	void {
+
+		$Test = new Captcha;
+		$Error = NULL;
+
+		////////
+
+		try { $Test->GetToken(); }
+		catch(Exception $Error) { }
+
+		$this->assertInstanceOf(
+			Captcha\Error\NotGenerated::class,
+			$Error
+		);
+
+		////////
+
+		$Test->Generate();
+		$Token = $Test->GetToken();
+		$this->assertGreaterThan(8, strlen($Token));
+		$this->assertEquals(2, substr_count($Token, '.'));
+
+		////////
+
+		$Token = $Test->GetTokenEncoded();
+		$this->assertGreaterThan(8, strlen($Token));
+		$this->assertEquals(0, substr_count($Test->GetTokenEncoded(), '.'));
+
+		////////
+
+		$Token = $Test->GetTokenForForm();
+		$this->assertTrue($Test->Config->Hardened);
+		$this->assertEquals('', $Token);
+
+		////////
+
+		$Test->Config->Hardened = FALSE;
+		$Token = $Test->GetTokenForForm();
+		$this->assertFalse($Test->Config->Hardened);
+		$this->assertEquals($Test->GetTokenEncoded(), $Token);
 
 		return;
 	}
