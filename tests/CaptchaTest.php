@@ -585,13 +585,10 @@ extends TestCase {
 	MethodValidateFromInput():
 	void {
 
-		$Test = new Captcha;
-		$Test->Generate();
-
 		if(!array_key_exists('_SESSION', $GLOBALS))
 		$GLOBALS['_SESSION'] = [];
 
-		$Test->PushToSession();
+		$Test = Captcha::Fresh();
 
 		////////
 
