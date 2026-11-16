@@ -587,7 +587,7 @@ class Captcha {
 		$Output = new static($Config);
 		$Output->Generate();
 
-		if(PHP_SAPI !== 'cli') {
+		if(isset($_SESSION)) {
 			if($Output->Config->Hardened)
 			$Output->PushToSession();
 		}

@@ -508,7 +508,7 @@ extends TestCase {
 		);
 
 		$Error = NULL;
-		try { $Test->GetImageBinary(); }
+		try { $Test->GetImageEncoded(); }
 		catch(Exception $Error) { }
 
 		$this->assertInstanceOf(
@@ -580,6 +580,40 @@ extends TestCase {
 		return;
 	}
 
+	#[Test]
+	public function
+	MethodValidateFromInput():
+	void {
+
+		$Test = new Captcha;
+		$Test->Generate();
+
+		if(!array_key_exists('_SESSION', $GLOBALS))
+		$GLOBALS['_SESSION'] = [];
+
+		$Test->PushToSession();
+
+		////////
+
+		// fail because both fields are missing.
+
+		$Data = [];
+		$this->assertFalse(Captcha::ValidateFromInput($Data));
+
+		// fail beacuse one field is still empty.
+
+		$Data[$Test->GetTokenFieldName()] = $Test->GetTokenEncoded();
+		$this->assertFalse(Captcha::ValidateFromInput($Data));
+
+		// pass because all the data is there.
+
+		$Data[$Test->GetCodeFieldName()] = $Test->GetKey();
+		$this->assertTrue(Captcha::ValidateFromInput($Data));
+
+
+		return;
+	}
+
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
@@ -601,6 +635,32 @@ extends TestCase {
 		$this->assertGreaterThan(1, strlen($Cap->GetKey()));
 		$this->assertFalse(Captcha::Validate($Cap->GetToken(), 'banana'));
 		$this->assertTrue(Captcha::Validate($Cap->GetToken(), $Cap->GetKey()));
+
+		return;
+	}
+
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
+
+	#[Test]
+	public function
+	MethodFilterOutputToken():
+	void {
+
+		$this->assertNull(Captcha::FilterOutputToken(''));
+		$this->assertEquals('b2s=', Captcha::FilterOutputToken('ok'));
+
+		return;
+	}
+
+	#[Test]
+	public function
+	MethodFilterInputToken():
+	void {
+
+		$this->assertNull(Captcha::FilterInputToken(''));
+		$this->assertNull(Captcha::FilterInputToken("\xFF"));
+		$this->assertEquals('ok', Captcha::FilterInputToken('b2s='));
 
 		return;
 	}
