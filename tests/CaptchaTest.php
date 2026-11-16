@@ -370,6 +370,10 @@ extends TestCase {
 			$Cap->GetToken(), $Cap->GetKey()
 		));
 
+		$this->assertTrue(Captcha::Validate(
+			$Cap->GetTokenEncoded(), $Cap->GetKey()
+		));
+
 		return;
 	}
 
@@ -491,10 +495,19 @@ extends TestCase {
 	void {
 
 		$Test = new Captcha;
-		$Error = NULL;
 
 		////////
 
+		$Error = NULL;
+		try { $Test->GetImageBinary(); }
+		catch(Exception $Error) { }
+
+		$this->assertInstanceOf(
+			Captcha\Error\NotGenerated::class,
+			$Error
+		);
+
+		$Error = NULL;
 		try { $Test->GetImageBinary(); }
 		catch(Exception $Error) { }
 
