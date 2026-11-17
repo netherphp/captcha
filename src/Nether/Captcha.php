@@ -205,6 +205,13 @@ class Captcha {
 	}
 
 	public function
+	GetTimeToExpire():
+	int {
+
+		return $this->Config->TimeToExpire;
+	}
+
+	public function
 	GetWhenIssued():
 	int {
 
