@@ -22,6 +22,9 @@ class Captcha {
 	////////////////////////////////////////////////////////////////
 
 	protected string
+	$ID;
+
+	protected string
 	$Key;
 
 	protected string
@@ -61,16 +64,19 @@ class Captcha {
 
 		if($Key === NULL)
 		unset($this->Key);
+
 		else
 		$this->Key = $Key;
 
 		////////
 
+		unset($this->ID);
 		unset($this->Hash);
 		unset($this->WhenIssued);
 		unset($this->WhenExpires);
 		unset($this->Payload);
 		unset($this->Token);
+		unset($this->Img);
 
 		return $this;
 	}
@@ -149,6 +155,16 @@ class Captcha {
 
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
+
+	public function
+	GetID():
+	string {
+
+		if(!isset($this->ID))
+		throw new Captcha\Error\NotGenerated;
+
+		return $this->ID;
+	}
 
 	public function
 	GetKey():
@@ -258,27 +274,6 @@ class Captcha {
 		return $this->Token;
 	}
 
-	#[Info('Returns Base64 encoded version of the token.')]
-	#[Added('2026-11-13')]
-	public function
-	GetTokenEncoded():
-	string {
-
-		return base64_encode($this->GetToken());
-	}
-
-	#[Info('Returns GetTokenEncoded but only if not hardened so that the front end can think less.')]
-	#[Added('2026-11-13')]
-	public function
-	GetTokenForForm():
-	string {
-
-		if($this->Config->Hardened)
-		return '';
-
-		return $this->GetTokenEncoded();
-	}
-
 	#[Info('Returns the configured field name for labeling the token.')]
 	#[Added('2026-11-13')]
 	public function
@@ -286,6 +281,15 @@ class Captcha {
 	string {
 
 		return $this->Config->FieldNameToken;
+	}
+
+	#[Info('Returns the value forms should send back.')]
+	#[Added('2026-11-13')]
+	public function
+	GetTokenFieldValue():
+	string {
+
+		return $this->ID;
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -354,14 +358,9 @@ class Captcha {
 		if(!isset($this->Token))
 		throw new Captcha\Error\NotGenerated;
 
-		if(!isset($_SESSION))
-		throw new Captcha\Error\NoSession;
-
 		////////
-
-		$Output = static::FilterOutputToken($this->Token);
-
-		$_SESSION[$this->Config->FieldNameToken] = $Output;
+	
+		static::SessionTokenSet($this->ID, $this->Token);
 
 		return $this;
 	}
@@ -381,6 +380,8 @@ class Captcha {
 			$this->Config->AlgoHash,
 			$this->Key
 		);
+
+		$this->ID = static::UUID();
 
 		return $this;
 	}
@@ -501,6 +502,10 @@ class Captcha {
 			// too long to submit this data.
 		}
 
+		catch(Exception $Err) {
+
+		}
+
 		////////
 
 		if($Err instanceof JWT\SignatureInvalidException) {
@@ -516,7 +521,16 @@ class Captcha {
 			throw new Captcha\Error\TokenExpired;
 
 			return FALSE;
+		}		
+
+		if($Err instanceof Exception) {
+			if($ThrowFail)
+			throw $Err;
+			
+			return FALSE;
 		}
+
+
 
 		////////
 
@@ -529,43 +543,35 @@ class Captcha {
 	bool {
 
 		$Config = $Config ?? new Captcha\Config;
-		$Session = Datastore::FromInput($_SESSION);
 
 		$Post = Datastore::FromInput($Input, [
-			$Config->FieldNameToken
-			=> static::FilterInputToken(...),
-			$Config->FieldNameCode
-			=> Filter\Text::TrimmedNullable(...)
+			$Config->FieldNameToken => Filter\Text::TrimmedNullable(...),
+			$Config->FieldNameCode  => Filter\Text::TrimmedNullable(...)
 		]);
 
-		// when in hardened mode the only trusted source of the token
-		// is from the PHP session.
+		////////
 
-		if($Config->Hardened) {
-			($Post)
-			->Unset($Config->FieldNameToken)
-			->Set(
-				$Config->FieldNameToken,
-				$Session->Get($Config->FieldNameToken)
-			);
+		if(!$Post->Get($Config->FieldNameToken)) {
+			if($ThrowFail)
+			throw new Captcha\Error\TokenExpired;
+			
+			return FALSE;
 		}
 
+		if(!$Post->Get($Config->FieldNameCode)) {
+			if($ThrowFail)
+			throw new Captcha\Error\TokenCodeIncorrect;
+
+			return FALSE;
+		}
+
+		$TID = $Post->Get($Config->FieldNameToken);
+		$TCode = $Post->Get($Config->FieldNameCode);
+		$TValue = static::SessionTokenGet($TID);
+
 		////////
 
-		if(!$Post->Get($Config->FieldNameToken))
-		return FALSE;
-
-		if(!$Post->Get($Config->FieldNameCode))
-		return FALSE;
-
-		////////
-
-		return static::Validate(
-			$Post[$Config->FieldNameToken],
-			$Post[$Config->FieldNameCode],
-			$ThrowFail,
-			$Config
-		);
+		return static::Validate($TValue, $TCode, $ThrowFail, $Config);
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -587,10 +593,8 @@ class Captcha {
 		$Output = new static($Config);
 		$Output->Generate();
 
-		if(isset($_SESSION)) {
-			if($Output->Config->Hardened)
-			$Output->PushToSession();
-		}
+		if(isset($_SESSION))
+		$Output->PushToSession();		
 
 		return $Output;
 	}
@@ -598,40 +602,80 @@ class Captcha {
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
-	#[Info('Generate output to treat as invalidated input later.')]
-	static public function
-	FilterOutputToken(string $Token):
-	?string {
 
-		$Out = base64_encode($Token);
 
-		if(!$Out)
-		return NULL;
+	static function
+	UUID():
+	string {
 
-		return $Out;
+		$Bytes = random_bytes(16);
+		$Bytes[6] = chr(ord($Bytes[6]) & 0x0f | 0x40);
+		$Bytes[8] = chr(ord($Bytes[8]) & 0x3f | 0x80);
+
+		return sprintf(
+			'%s%s-%s-%s-%s-%s%s%s',
+			... str_split(bin2hex($Bytes), 4)
+		);
 	}
 
-	#[Info('Treat input as unvalidated input.')]
-	static public function
-	FilterInputToken(string $Input):
-	?string {
+	////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////
 
-		$Out = Filter\Text::TrimmedNullable($Input);
+	// these are the methods that abstract the rest of the library from
+	// the session storage of these tokens. adding support for alternate
+	// storage locations should be just editing these.
 
-		if(!$Out)
-		return NULL;
+	static function
+	SessionTokenStorageInit():
+	void {
+
+		if(!isset($_SESSION))
+		$GLOBALS['_SESSION'] = [];
+
+		if(!isset($_SESSION['NetherCaptchaTokens']))
+		$_SESSION['NetherCaptchaTokens'] = [];
+
+		return;
+	}
+
+	static function
+	SessionTokenGet(string $ID):
+	string|FALSE {
+
+		static::SessionTokenStorageInit();
 
 		////////
 
-		if(is_string($Out))
-		$Out = base64_decode($Out, TRUE);
+		if(!array_key_exists($ID, $_SESSION['NetherCaptchaTokens']))
+		return FALSE;
 
-		if(!$Out)
-		return NULL;
+		return $_SESSION['NetherCaptchaTokens'][$ID];
+	}
+
+	static function
+	SessionTokenSet(string $ID, string $Token):
+	void {
+
+		static::SessionTokenStorageInit();
 
 		////////
 
-		return $Out;
+		$_SESSION['NetherCaptchaTokens'][$ID] = $Token;
+
+		return;
+	}
+
+	static function
+	SessionTokenUnset(string $ID):
+	void {
+
+		static::SessionTokenStorageInit();
+
+		////////
+
+		unset($_SESSION['NetherCaptchaTokens'][$ID]);
+
+		return;
 	}
 
 };

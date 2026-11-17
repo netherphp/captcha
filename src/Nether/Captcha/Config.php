@@ -20,10 +20,6 @@ class Config {
 	FontBoldCharset    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
 	FontCrispCharset   = 'ABCDEFGHIJKLMNPRTUVWXYZ12346789';
 
-	#[Info('Hardened mode will not send the Token to the client, but would mess with someone if they had multiple tabs open.')]
-	public bool
-	$Hardened = TRUE;
-
 	public string
 	$AlgoHash = 'sha512';
 
@@ -34,7 +30,7 @@ class Config {
 	$Issuer = 'netherphp/captcha';
 
 	public int
-	$TimeToExpire = 180;
+	$TimeToExpire = 240;
 
 	public string
 	$KeyCharList = self::FontCrispCharset;
@@ -58,6 +54,6 @@ class Config {
 	$FieldNameCode = 'nether-captcha-code';
 
 	public string
-	$FieldNameToken = 'nether-catpcha-token';
+	$FieldNameToken = 'nether-captcha-token';
 
 };

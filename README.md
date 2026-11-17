@@ -46,10 +46,6 @@ $Cap->Generate();
 
 Render the image in the form you want to protect with the captcha.
 
-The hidden Token field can be omitted when `Hardened` mode is enabled, which is
-also the default, as the token will be stored in the PHP Session. Otherwise
-that field is needed to bounce the token back and forth.
-
 ```html
 <div>
 	<div>
@@ -58,7 +54,7 @@ that field is needed to bounce the token back and forth.
 	<div>
 		<p>Enter code from above image.</p>
 		<input type="text" name="<?php echo $Cap->GetCodeFieldName() ?>" />
-		<input type="hidden" name="<?php echo $Cap->GetTokenFieldName() ?>" value="<?php echo $Cap->GetTokenForForm() ?>" />
+		<input type="hidden" name="<?php echo $Cap->GetTokenFieldName() ?>" value="<?php echo $Cap->GetTokenFieldValue() ?>" />
 	</div>
 </div>
 ```

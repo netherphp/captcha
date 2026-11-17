@@ -370,10 +370,6 @@ extends TestCase {
 			$Cap->GetToken(), $Cap->GetKey()
 		));
 
-		$this->assertTrue(Captcha::Validate(
-			$Cap->GetTokenEncoded(), $Cap->GetKey()
-		));
-
 		return;
 	}
 
@@ -469,22 +465,8 @@ extends TestCase {
 
 		////////
 
-		$Token = $Test->GetTokenEncoded();
-		$this->assertGreaterThan(8, strlen($Token));
-		$this->assertEquals(0, substr_count($Test->GetTokenEncoded(), '.'));
-
-		////////
-
-		$Token = $Test->GetTokenForForm();
-		$this->assertTrue($Test->Config->Hardened);
-		$this->assertEquals('', $Token);
-
-		////////
-
-		$Test->Config->Hardened = FALSE;
-		$Token = $Test->GetTokenForForm();
-		$this->assertFalse($Test->Config->Hardened);
-		$this->assertEquals($Test->GetTokenEncoded(), $Token);
+		$Token = $Test->GetTokenFieldValue();
+		$this->assertEquals($Test->GetID(), $Token);
 
 		return;
 	}
@@ -540,42 +522,16 @@ extends TestCase {
 
 		try { $Test->PushToSession()(); }
 		catch(Exception $Error) { }
-		$this->assertInstanceOf(
-			Captcha\Error\NotGenerated::class,
-			$Error
-		);
+		$this->assertInstanceOf(Captcha\Error\NotGenerated::class, $Error);
 
 		////////
-
-		// test assuming sessions are disabled.
-		// force nuke the session global to make sure.
-
-		if(array_key_exists('_SESSION', $GLOBALS))
-		unset($GLOBALS['_SESSION']);
 
 		$Test->Generate();
-		try { $Test->PushToSession(); }
-		catch(Exception $Error) { }
-		$this->assertInstanceOf(
-			Captcha\Error\NoSession::class,
-			$Error
-		);
-
-		////////
-
-		// test assuming sessions are enabled.
-		// force rebuild the session global to make sure.
-
-		$GLOBALS['_SESSION'] = [];
 		$Error = NULL;
-
+		
 		try { $Test->PushToSession(); }
 		catch(Exception $Error) { }
 		$this->assertNull($Error);
-
-		$this->assertTrue(isset(
-			$_SESSION[$Test->GetTokenFieldName()]
-		));
 
 		return;
 	}
@@ -587,27 +543,43 @@ extends TestCase {
 
 		$Test = new Captcha;
 		$Test->Generate();
+		$Test->PushToSession();
 
 		////////
 
-		if(!array_key_exists('_SESSION', $GLOBALS))
-		$GLOBALS['_SESSION'] = [];
+		$Data = [
+			$Test->GetCodeFieldName()  => '',
+			$Test->GetTokenFieldName() => ''
+		];
+
+		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
 		////////
 
-		$Data = [];
+		$Data[$Test->GetCodeFieldName()] = 'asdf';
+		$Data[$Test->GetTokenFieldName()] = 'jkl;';
+
 		$this->assertFalse(Captcha::ValidateFromInput($Data));
 
-		$_SESSION[$Test->GetTokenFieldName()] = '';
-		$this->assertFalse(Captcha::ValidateFromInput($Data));
-
-		$_SESSION[$Test->GetTokenFieldName()] = $Test->GetTokenEncoded();
-		$this->assertFalse(Captcha::ValidateFromInput($Data));
-
-		$Data[$Test->GetCodeFieldName()] = '';
-		$this->assertFalse(Captcha::ValidateFromInput($Data));
+		////////
 
 		$Data[$Test->GetCodeFieldName()] = $Test->GetKey();
+		$Data[$Test->GetTokenFieldName()] = 'jkl;';
+
+		$this->assertFalse(Captcha::ValidateFromInput($Data));
+
+		////////
+
+		$Data[$Test->GetCodeFieldName()] = 'asdf';
+		$Data[$Test->GetTokenFieldName()] = $Test->GetID();
+
+		$this->assertFalse(Captcha::ValidateFromInput($Data));
+
+		////////
+
+		$Data[$Test->GetCodeFieldName()] = $Test->GetKey();
+		$Data[$Test->GetTokenFieldName()] = $Test->GetID();
+
 		$this->assertTrue(Captcha::ValidateFromInput($Data));
 
 		return;
@@ -641,27 +613,5 @@ extends TestCase {
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
 
-	#[Test]
-	public function
-	MethodFilterOutputToken():
-	void {
-
-		$this->assertNull(Captcha::FilterOutputToken(''));
-		$this->assertEquals('b2s=', Captcha::FilterOutputToken('ok'));
-
-		return;
-	}
-
-	#[Test]
-	public function
-	MethodFilterInputToken():
-	void {
-
-		$this->assertNull(Captcha::FilterInputToken(''));
-		$this->assertNull(Captcha::FilterInputToken("\xFF"));
-		$this->assertEquals('ok', Captcha::FilterInputToken('b2s='));
-
-		return;
-	}
 
 };
