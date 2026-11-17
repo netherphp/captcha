@@ -356,6 +356,20 @@ class Captcha {
 		return $this;
 	}
 
+	public function
+	Destroy():
+	static {
+
+		if(isset($this->ID))
+		static::SessionTokenUnset($this->ID);
+
+		////////
+
+		$this->SetKey(NULL);
+
+		return $this;
+	}
+
 	#[Info('Push the token into the PHP session.')]
 	#[Added('2026-11-13')]
 	public function
@@ -608,8 +622,6 @@ class Captcha {
 
 	////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////
-
-
 
 	static function
 	UUID():
